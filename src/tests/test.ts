@@ -31,13 +31,13 @@ export async function test() {
         logger.info({ server: nc.getServer() }, 'Connected to NATS');
         const client = new PermissionsClient(nc);
 
-        logger.info({ step: 1, action: 'grant', module: 'trades', key: TEST_API_KEY }, 'Granting initial permission...');
-        const grantResponse = await client.grant({ apiKey: TEST_API_KEY, module: 'trades', action: 'create' });
+        logger.info({ step: 1, action: 'grant', module: 'TRADES', key: TEST_API_KEY }, 'Granting initial permission...');
+        const grantResponse = await client.grant({ apiKey: TEST_API_KEY, module: 'TRADES', action: 'create' });
         logger.info({ response: grantResponse }, 'Grant response received');
         assert(!isNatsError(grantResponse), 'Grant request was successful', 'Grant request returned an error');
 
-        logger.info({ step: 2, action: 'check', module: 'trades', key: TEST_API_KEY }, 'Checking for existing permission...');
-        const checkResponse1 = await client.check({ apiKey: TEST_API_KEY, module: 'trades', action: 'create' });
+        logger.info({ step: 2, action: 'check', module: 'TRADES', key: TEST_API_KEY }, 'Checking for existing permission...');
+        const checkResponse1 = await client.check({ apiKey: TEST_API_KEY, module: 'TRADES', action: 'create' });
         logger.info({ response: checkResponse1 }, 'Check response received');
         assert(!isNatsError(checkResponse1), 'Check request did not return an error', 'Check request returned an error');
         assert((checkResponse1 as { allowed: boolean }).allowed === true, 'Permission is allowed as expected', 'Permission was not allowed');
@@ -46,11 +46,16 @@ export async function test() {
         const listResponse1 = await client.list({ apiKey: TEST_API_KEY });
         logger.info({ response: JSON.stringify(listResponse1) }, 'List response received');
         assert(!isNatsError(listResponse1), 'List request did not return an error', 'List request returned an error');
+        logger.warn(JSON.stringify(listResponse1))
+        logger.warn(JSON.stringify(listResponse1))
+        logger.warn(JSON.stringify(listResponse1))
+        logger.warn(JSON.stringify(listResponse1))
+        logger.warn(JSON.stringify(listResponse1))
         assert((listResponse1 as { permissions: any[] }).permissions.length === 1, 'List contains 1 permission', `Expected 1 permission, but got ${(listResponse1 as any)?.permissions?.length}`);
-        assert((listResponse1 as { permissions: any[] }).permissions[0].module === 'trades' && (listResponse1 as { permissions: any[] }).permissions[0].action === 'create', 'Listed permission matches granted permission', 'Listed permission does not match granted permission');
+        assert((listResponse1 as { permissions: any[] }).permissions[0].module === 'TRADES' && (listResponse1 as { permissions: any[] }).permissions[0].action === 'create', 'Listed permission matches granted permission', 'Listed permission does not match granted permission');
 
-        logger.info({ step: 4, action: 'revoke', module: 'trades', key: TEST_API_KEY }, 'Revoking the first permission...');
-        const revokeResponse = await client.revoke({ apiKey: TEST_API_KEY, module: 'trades', action: 'create' });
+        logger.info({ step: 4, action: 'revoke', module: 'TRADES', key: TEST_API_KEY }, 'Revoking the first permission...');
+        const revokeResponse = await client.revoke({ apiKey: TEST_API_KEY, module: 'TRADES', action: 'create' });
         logger.info({ response: revokeResponse }, 'Revoke response received');
         assert(!isNatsError(revokeResponse), 'Revoke request was successful', 'Revoke request returned an error');
 

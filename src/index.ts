@@ -1,18 +1,43 @@
 import Fastify from 'fastify';
-import { initDb, closeDb } from './db';
+import { initDb, closeDb, db } from './db';
 import { env } from './config/env';
-import { logger } from './logger';
 
 import { initializeNats, stopNats, getNatsConnection } from './nats/connection';
 import { startNatsListeners } from './nats/nats-server';
-import {test} from "./tests/test";
+import { test } from './tests/test';
 
 const fastify = Fastify({
     logger: { level: 'trace' },
 })
 
 fastify.get('/health', async (request, reply) => {
-    return { status: 'ok' };
+    try {
+        const natsConnection = getNatsConnection();
+        if (natsConnection.isClosed()) {
+            throw new Error('NATS connection is reported as closed.');
+        }
+        const dbClient = await db.connect();
+        await dbClient.query('SELECT 1');
+        dbClient.release();
+
+        return {
+            status: 'ok',
+            dependencies: {
+                database: 'ok',
+                nats: 'ok',
+            },
+        };
+    } catch (error: any) {
+        fastify.log.error(error, 'Health check failed');
+
+        reply.status(503).send({
+            status: 'unhealthy',
+            error: {
+                message: error.message,
+                dependency: error.message.toLowerCase().includes('nats') ? 'nats' : 'database',
+            },
+        });
+    }
 });
 
 
@@ -24,7 +49,7 @@ async function startServer(): Promise<void> {
         const natsConnection = getNatsConnection();
         await startNatsListeners(natsConnection);
 
-        await test()
+        await test();
 
         await fastify.listen({ port: env.PORT, host: env.HOST || '0.0.0.0' });
 
